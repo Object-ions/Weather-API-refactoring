@@ -1,49 +1,43 @@
-// Business Logic
+import '../css/styles.css';
+import WeatherService from './weather-service.js'
 
-function getWeather(city, state, country) {
-  let request = new XMLHttpRequest();
-  const url = `https://api.openweathermap.org/data/2.5/weather?q=${city},${state},${country},&appid=${process.env.API_KEY}&units=imperial`
-
-  request.addEventListener("loadend", function() {
-    const response = JSON.parse(this.responseText);
-    if (this.status === 200) {
-      printElements(response, city, state, country);
-     } else {
-      printError(this, response, city);
-     }
-});
-
-  request.open("GET", url, true);
-  request.send();
-}
 
 // UI Logic
 
-function printError(request, apiResponse, city){
-  document.querySelector('#showResponse').innerText = `There was an error ${city}: ${request.status} ${request.statusText}: $(apiResponse.message)`;
-}
-
-function printElements(apiResponse, city, state, country){
-  document.querySelector('#showResponse').innerText = `The humidity in ${city}, ${state}, ${country} is ${apiResponse.main.humidity}%. The temperature in Fahrenheit is ${apiResponse.main.temp} degrees. The wind speed in ${city} is ${apiResponse.wind.speed} mph with gusts of ${apiResponse.wind.gust} mph`;
-
-}
-//tertirary operator, fix the commas.
-
-
-function handleFormSubmission(event){
+function handleFormSubmission(event) {
   event.preventDefault();
-
-const city = document.querySelector('#city').value;
-const state = document.querySelector('#state').value;
-const country = document.querySelector('#country').value
-
-document.querySelector('#city').value = null;
-document.querySelector('#state').value = null;
-document.querySelector('#country').value = null;
-getWeather(city, state, country);
+  const city = document.querySelector('#location').value;
+  document.querySelector('#location').value = null;
+  let promise = WeatherService.getWeather(city);
+  promise.then(function (weatherDataArray) {
+    printElements(weatherDataArray);
+  }, function (errorArray) {
+    printError(errorArray);
+  });
 }
 
-window.addEventListener("load", function(){
-  document.querySelector('form').addEventListener('submit', handleFormSubmission);
+function printElements(data) {
+  document.querySelector('#showResponse').innerText = `The humidity in ${data[1]} is ${data[0].main.humidity}%.
+  The temperature in Kelvins is ${data[0].main.temp} degrees.`;
+}
+
+function printError(error) {
+  document.querySelector('#showResponse').innerText = `There was an error accessing the weather data for ${error[2]}: ${error[0].status} ${error[0].statusText}: ${error[1].message}`;
+}
+
+window.addEventListener("load", function () {
+  document.querySelector('form').addEventListener("submit", handleFormSubmission);
 });
 
+// function handleFormSubmission(event) {
+//   event.preventDefault();
+
+//   const city = document.querySelector('#city').value;
+//   const state = document.querySelector('#state').value;
+//   const country = document.querySelector('#country').value
+
+//   document.querySelector('#city').value = null;
+//   document.querySelector('#state').value = null;
+//   document.querySelector('#country').value = null;
+//   getWeather(city, state, country);
+// }
